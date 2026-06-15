@@ -25,6 +25,7 @@ REQUIRED_EXECUTABLES = (
     "scripts/build-genfit.sh",
     "scripts/build-muse.sh",
     "scripts/ccmake-muse.sh",
+    "scripts/help.sh",
     "scripts/install-configured-muse.sh",
     "scripts/stack-shell.sh",
 )

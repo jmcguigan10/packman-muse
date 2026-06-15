@@ -50,6 +50,7 @@ legacy-graphics = { features = ["legacy-graphics"] }
 full = { features = ["mpi", "legacy-graphics"] }
 
 [tasks]
+help = "bash scripts/help.sh"
 probe-host = "bash scripts/probe-host.sh"
 init-prefix = "mkdir -p .install/src .install/build .install/state .install/logs .local/bin"
 stack-shell = "bash scripts/stack-shell.sh"

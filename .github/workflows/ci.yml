@@ -54,6 +54,7 @@ jobs:
           test -x scripts/build-genfit.sh
           test -x scripts/build-muse.sh
           test -x scripts/ccmake-muse.sh
+          test -x scripts/help.sh
           test -x scripts/install-configured-muse.sh
           test -x scripts/stack-shell.sh
 
