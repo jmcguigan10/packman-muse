@@ -146,6 +146,70 @@ jobs:
           count="$(grep -Ec '^\[target\.(linux-64|linux-aarch64|osx-64|osx-arm64)\.dependencies\]' pixi.toml)"
           test "$count" -eq 1
 
+  wsl-platform-rewrite:
+    name: WSL platform rewrite
+    runs-on: windows-2022
+
+    defaults:
+      run:
+        shell: wsl-bash {0}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up WSL2 Ubuntu
+        uses: Vampire/setup-wsl@v7
+        with:
+          distribution: Ubuntu-24.04
+          wsl-version: 2
+          additional-packages: |
+            ca-certificates
+            curl
+            git
+            gzip
+            openssh-client
+            tar
+
+      - name: Copy checkout into WSL filesystem
+        run: |
+          case "$GITHUB_WORKSPACE" in
+            [A-Za-z]:* | *\\*) src="$(wslpath -u "$GITHUB_WORKSPACE")" ;;
+            *) src="$GITHUB_WORKSPACE" ;;
+          esac
+          dst="$HOME/fpb-edits-ci"
+          rm -rf "$dst"
+          mkdir -p "$dst"
+          tar -C "$src" \
+            --exclude=.git \
+            --exclude=.install \
+            --exclude=.local \
+            --exclude=.pixi \
+            -cf - . | tar -C "$dst" -xf -
+
+      - name: Rewrite pixi.toml for WSL platform
+        run: |
+          cd "$HOME/fpb-edits-ci"
+
+          test "$(uname -s)" = "Linux"
+          test "$(uname -m)" = "x86_64"
+
+          bash scripts/pixi-use-current-platform.sh pixi.toml
+          grep -F 'platforms = ["linux-64"]' pixi.toml
+          grep -F "[target.linux-64.dependencies]" pixi.toml
+
+      - name: WSL rewrite is idempotent
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          cp pixi.toml pixi.after-first.toml
+          bash scripts/pixi-use-current-platform.sh pixi.toml
+          cmp -s pixi.after-first.toml pixi.toml
+
+      - name: Only one active target dependency block remains
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          count="$(grep -Ec '^\[target\.(linux-64|linux-aarch64|osx-64|osx-arm64)\.dependencies\]' pixi.toml)"
+          test "$count" -eq 1
+
   pixi-bootstrap:
     name: Pixi bootstrap and dependency solve
     runs-on: ${{ matrix.os }}
@@ -185,6 +249,64 @@ jobs:
 
       - name: Host probe
         run: ./scripts/pixi-local run -e batch probe-host
+
+  wsl-pixi-bootstrap:
+    name: WSL Pixi bootstrap and dependency solve
+    runs-on: windows-2022
+
+    defaults:
+      run:
+        shell: wsl-bash {0}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up WSL2 Ubuntu
+        uses: Vampire/setup-wsl@v7
+        with:
+          distribution: Ubuntu-24.04
+          wsl-version: 2
+          additional-packages: |
+            ca-certificates
+            curl
+            git
+            gzip
+            openssh-client
+            tar
+
+      - name: Copy checkout into WSL filesystem
+        run: |
+          case "$GITHUB_WORKSPACE" in
+            [A-Za-z]:* | *\\*) src="$(wslpath -u "$GITHUB_WORKSPACE")" ;;
+            *) src="$GITHUB_WORKSPACE" ;;
+          esac
+          dst="$HOME/fpb-edits-ci"
+          rm -rf "$dst"
+          mkdir -p "$dst"
+          tar -C "$src" \
+            --exclude=.git \
+            --exclude=.install \
+            --exclude=.local \
+            --exclude=.pixi \
+            -cf - . | tar -C "$dst" -xf -
+
+      - name: Bootstrap Pixi
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          bash scripts/bootstrap-pixi.sh
+          test -x .local/bin/pixi
+          test -x scripts/pixi-local
+          ./scripts/pixi-local --version
+
+      - name: Install Pixi environment
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          ./scripts/pixi-local install
+
+      - name: Host probe
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          ./scripts/pixi-local run -e batch probe-host
 
   public-dependency-builds:
     name: Public dependency builds
@@ -228,3 +350,65 @@ jobs:
 
       - name: Build CLHEP
         run: ./scripts/pixi-local run -e batch build-clhep
+
+  wsl-public-dependency-builds:
+    name: WSL public dependency builds
+    runs-on: windows-2022
+    timeout-minutes: 120
+
+    defaults:
+      run:
+        shell: wsl-bash {0}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up WSL2 Ubuntu
+        uses: Vampire/setup-wsl@v7
+        with:
+          distribution: Ubuntu-24.04
+          wsl-version: 2
+          additional-packages: |
+            ca-certificates
+            curl
+            git
+            gzip
+            openssh-client
+            tar
+
+      - name: Copy checkout into WSL filesystem
+        run: |
+          case "$GITHUB_WORKSPACE" in
+            [A-Za-z]:* | *\\*) src="$(wslpath -u "$GITHUB_WORKSPACE")" ;;
+            *) src="$GITHUB_WORKSPACE" ;;
+          esac
+          dst="$HOME/fpb-edits-ci"
+          rm -rf "$dst"
+          mkdir -p "$dst"
+          tar -C "$src" \
+            --exclude=.git \
+            --exclude=.install \
+            --exclude=.local \
+            --exclude=.pixi \
+            -cf - . | tar -C "$dst" -xf -
+
+      - name: Bootstrap and install
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          bash scripts/bootstrap-pixi.sh
+          ./scripts/pixi-local install
+
+      - name: Build XQilla
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          ./scripts/pixi-local run -e batch build-xqilla
+
+      - name: Probe XQilla
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          ./scripts/pixi-local run -e batch probe-xqilla
+
+      - name: Build CLHEP
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          ./scripts/pixi-local run -e batch build-clhep

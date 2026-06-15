@@ -46,6 +46,16 @@ ssh -T git@github.com
 On macOS the build scripts use `/usr/bin/ssh` for Git so that normal Keychain
 SSH behavior works.
 
+WSL2 on Windows is supported through Ubuntu and is tested in CI. Keep the
+checkout inside the WSL filesystem, for example under `~/code`, rather than
+under `/mnt/c`, then use the same commands as Linux:
+
+```bash
+bash scripts/bootstrap-pixi.sh
+./scripts/pixi-local install
+./scripts/pixi-local run -e batch build-stack
+```
+
 ## What bootstrap creates
 
 `scripts/bootstrap-pixi.sh` installs Pixi locally and installs

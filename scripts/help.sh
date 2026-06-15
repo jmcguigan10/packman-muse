@@ -9,6 +9,10 @@ First setup:
   ./scripts/pixi-local install
   ./scripts/pixi-local run -e batch build-stack
 
+WSL2 setup note:
+  clone under the WSL filesystem, for example ~/code/fpb-edits
+  do not build from /mnt/c
+
 Build and probe tasks:
   ./scripts/pixi-local run -e batch probe-host
   ./scripts/pixi-local run -e batch build-xqilla
