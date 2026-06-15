@@ -14,7 +14,7 @@ detect_platform() {
     Linux:x86_64)
       echo "linux-x86_64"
       ;;
-    Linux:aarch64|Linux:arm64)
+    Linux:aarch64 | Linux:arm64)
       echo "linux-aarch64"
       ;;
     Darwin:x86_64)
@@ -336,8 +336,8 @@ checkout_git_source() {
     local current
     current="$(git -C "$srcdir" rev-parse HEAD)"
     if [ "$current" != "$sha" ]; then
-      git -C "$srcdir" fetch --tags --depth="${GIT_DEPTH:-1}" origin "${ref:-$sha}" \
-        || git -C "$srcdir" fetch --tags origin "${ref:-$sha}"
+      git -C "$srcdir" fetch --tags --depth="${GIT_DEPTH:-1}" origin "${ref:-$sha}" ||
+        git -C "$srcdir" fetch --tags origin "${ref:-$sha}"
       git -C "$srcdir" checkout --detach "$sha"
     fi
   fi
@@ -395,11 +395,11 @@ find_library_file() {
       find "$base" \
         \( -type f -o -type l \) \
         \( \
-          -name "lib${stem}.dylib" -o \
-          -name "lib${stem}.*.dylib" -o \
-          -name "lib${stem}.so" -o \
-          -name "lib${stem}.so.*" -o \
-          -name "lib${stem}.a" \
+        -name "lib${stem}.dylib" -o \
+        -name "lib${stem}.*.dylib" -o \
+        -name "lib${stem}.so" -o \
+        -name "lib${stem}.so.*" -o \
+        -name "lib${stem}.a" \
         \) \
         -print -quit 2>/dev/null || true
     )"

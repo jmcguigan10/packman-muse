@@ -2,13 +2,14 @@
 set -euo pipefail
 
 # This helper is source-only; env.sh provides the shared build globals.
-# shellcheck disable=SC2034,SC2154
+# shellcheck disable=SC2154
 
 MUSE_REPO="${MUSE_REPO:-git@github.com:MUSE-EXP/MUSE.git}"
 MUSE_REF="${MUSE_REF:-master}"
 MUSE_SHA="${MUSE_SHA:-37a7846d09fb44b7dff533a27ba242241de32504}"
 
 MUSE_SRCDIR="$SRC/muse"
+# shellcheck disable=SC2034
 MUSE_BUILDDIR="$BUILD/muse"
 
 prepare_muse_source() {
@@ -69,6 +70,7 @@ prepare_muse_cmake_args() {
     exit 2
   fi
 
+  # shellcheck disable=SC2034
   MUSE_CMAKE_ARGS=(
     -DCMAKE_INSTALL_PREFIX="$MUSE_PREFIX"
     -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH_CMAKE"

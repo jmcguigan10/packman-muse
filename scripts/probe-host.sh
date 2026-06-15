@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=env.sh
+# shellcheck source=scripts/env.sh
 source "$SCRIPT_DIR/env.sh"
 
 compiler="${CXX:-c++}"
@@ -14,7 +14,7 @@ tmp="$BUILD/probe-host"
 rm -rf "$tmp"
 mkdir -p "$tmp"
 
-cat > "$tmp/cxx20.cpp" <<'EOF'
+cat >"$tmp/cxx20.cpp" <<'EOF'
 #include <concepts>
 #include <span>
 #include <ranges>

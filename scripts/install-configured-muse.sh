@@ -2,9 +2,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=env.sh
+# shellcheck source=scripts/env.sh
 source "$SCRIPT_DIR/env.sh"
-# shellcheck source=muse-cmake-args.sh
+# shellcheck source=scripts/muse-cmake-args.sh
 source "$SCRIPT_DIR/muse-cmake-args.sh"
 
 if [ ! -f "$MUSE_BUILDDIR/CMakeCache.txt" ]; then

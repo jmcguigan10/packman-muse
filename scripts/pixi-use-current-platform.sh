@@ -15,7 +15,7 @@ detect_pixi_platform() {
     Linux:x86_64)
       echo "linux-64"
       ;;
-    Linux:aarch64|Linux:arm64)
+    Linux:aarch64 | Linux:arm64)
       echo "linux-aarch64"
       ;;
     Darwin:x86_64)
@@ -94,7 +94,7 @@ if ! awk -v platform="$platform" '
     }
     emit_current_compiler_target()
   }
-' "$MANIFEST" > "$tmp"; then
+' "$MANIFEST" >"$tmp"; then
   status=$?
   rm -f "$tmp"
   if [ "$status" -eq 42 ]; then

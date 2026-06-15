@@ -10,7 +10,7 @@ export PIXI_NO_CONFIG=1
 
 maybe_use_current_platform() {
   case "${1:-}" in
-    install|lock|run|shell|add|remove|update|upgrade)
+    install | lock | run | shell | add | remove | update | upgrade)
       if [ "${PIXI_AUTO_PLATFORM:-1}" != "0" ]; then
         "$ROOT/scripts/pixi-use-current-platform.sh" "$ROOT/pixi.toml"
       fi

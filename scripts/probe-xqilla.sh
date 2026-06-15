@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=env.sh
+# shellcheck source=scripts/env.sh
 source "$SCRIPT_DIR/env.sh"
 
 need_cmd xqilla
@@ -10,13 +10,13 @@ tmp="$BUILD/probe-xqilla"
 rm -rf "$tmp"
 mkdir -p "$tmp"
 
-cat > "$tmp/test.xq" <<'EOF'
+cat >"$tmp/test.xq" <<'EOF'
 1 + 1
 EOF
 
 xqilla "$tmp/test.xq" | grep -q "2"
 
-cat > "$tmp/link.cpp" <<'EOF'
+cat >"$tmp/link.cpp" <<'EOF'
 #include <xqilla/xqilla-simple.hpp>
 
 int main() {
