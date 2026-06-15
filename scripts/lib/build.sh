@@ -40,6 +40,7 @@ checkout_git_source() {
   local sha="${4:-}"
   local clone_args
   local current_url
+  local fetch_target
 
   if [ ! -d "$srcdir/.git" ]; then
     clone_args=(clone --depth="${GIT_DEPTH:-1}")
@@ -56,8 +57,14 @@ checkout_git_source() {
   fi
 
   if [ -n "$sha" ] && [ "$(git -C "$srcdir" rev-parse HEAD)" != "$sha" ]; then
-    git -C "$srcdir" fetch --tags --depth="${GIT_DEPTH:-1}" origin "${ref:-$sha}" ||
-      git -C "$srcdir" fetch --tags origin "${ref:-$sha}"
+    fetch_target="$sha"
+    git -C "$srcdir" fetch --tags --depth="${GIT_DEPTH:-1}" origin "$fetch_target" ||
+      git -C "$srcdir" fetch --tags origin "$fetch_target" ||
+      {
+        fetch_target="${ref:-HEAD}"
+        git -C "$srcdir" fetch --tags --depth="${GIT_DEPTH:-1}" origin "$fetch_target" ||
+          git -C "$srcdir" fetch --tags origin "$fetch_target"
+      }
     git -C "$srcdir" checkout --detach "$sha"
   fi
 }
