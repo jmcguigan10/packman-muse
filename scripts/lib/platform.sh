@@ -177,13 +177,17 @@ configure_toolchain() {
 
 configure_jobs() {
   if [ "$JOBS" = "auto" ]; then
+    local detected_jobs
+
     if command -v getconf >/dev/null 2>&1; then
-      JOBS="$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
+      detected_jobs="$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
     elif command -v sysctl >/dev/null 2>&1; then
-      JOBS="$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
+      detected_jobs="$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
     else
-      JOBS=4
+      detected_jobs=4
     fi
+
+    JOBS="$((detected_jobs > 1 ? detected_jobs - 1 : 1))"
   fi
 
   export JOBS
