@@ -129,6 +129,29 @@ The runtime environment puts local source-built prefixes first, then the Pixi
 environment. It also sets `COOKERHOME` so g4PSI can find the installed MUSE
 shared data at `.local/bin/.muse/shared`.
 
+## Script organization
+
+Top-level files under `scripts/` are public command entrypoints used by Pixi
+tasks and README examples. Keep those filenames stable.
+
+Source-only defaults live in `configs/*.sh`. These files should only assign
+overridable variables such as source URLs, pinned SHAs, install-prefix names,
+and CMake defaults.
+
+Reusable shell functions live under `scripts/lib/`:
+
+```text
+core/          logging, paths, stamps, checksums
+platform/      platform detection, toolchain, Pixi manifest rewrite
+build/         downloads, Git checkout, CMake/library discovery, runtime env
+pixi/          Pixi bootstrap and wrapper helpers
+components/    XQilla, CLHEP, Geant4, GenFit, MUSE, probes
+```
+
+The main environment loader is `scripts/env.sh`. It sources configs and libs,
+sets up the repo-local Pixi/source-built environment, then exposes component
+functions to the top-level entrypoints.
+
 ## Build control
 
 The task graph is defined in `pixi.toml`.

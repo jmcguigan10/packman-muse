@@ -43,7 +43,7 @@ jobs:
             .local/pixi-cache
             .pixi
             .install/src
-          key: ${{ runner.os }}-${{ runner.arch }}-full-stack-${{ hashFiles('pixi.toml', 'pixi.lock', 'scripts/*.sh', 'scripts/pixi-local', 'scripts/pixi-local.in') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-full-stack-${{ hashFiles('pixi.toml', 'pixi.lock', 'configs/*.sh', 'scripts/*.sh', 'scripts/**/*.sh', 'scripts/pixi-local', 'scripts/pixi-local.in') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-full-stack-
 

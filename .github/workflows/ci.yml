@@ -23,13 +23,21 @@ jobs:
           sudo apt-get install -y shellcheck shfmt
 
       - name: Bash syntax check
-        run: bash -n scripts/*.sh scripts/pixi-local scripts/pixi-local.in
+        run: |
+          git ls-files 'configs/*.sh' 'scripts/*.sh' 'scripts/**/*.sh' 'scripts/pixi-local' 'scripts/pixi-local.in' |
+            while IFS= read -r file; do
+              bash -n "$file"
+            done
 
       - name: ShellCheck
-        run: shellcheck -x scripts/*.sh scripts/pixi-local scripts/pixi-local.in
+        run: |
+          git ls-files 'configs/*.sh' 'scripts/*.sh' 'scripts/**/*.sh' 'scripts/pixi-local' 'scripts/pixi-local.in' |
+            xargs shellcheck -x
 
       - name: shfmt check
-        run: shfmt -d -i 2 -ci scripts/*.sh scripts/pixi-local scripts/pixi-local.in
+        run: |
+          git ls-files 'configs/*.sh' 'scripts/*.sh' 'scripts/**/*.sh' 'scripts/pixi-local' 'scripts/pixi-local.in' |
+            xargs shfmt -d -i 2 -ci
 
       - name: Executable bit check
         run: |
@@ -46,7 +54,6 @@ jobs:
           test -x scripts/build-muse.sh
           test -x scripts/ccmake-muse.sh
           test -x scripts/install-configured-muse.sh
-          test -x scripts/muse-cmake-args.sh
           test -x scripts/stack-shell.sh
 
       - name: Check pixi-local template drift
@@ -59,10 +66,10 @@ jobs:
             exit 1
           fi
           git grep -n -- "-DCMAKE_PREFIX_PATH=\"\$CMAKE_PREFIX_PATH_CMAKE\"" -- \
-            scripts/build-clhep.sh \
-            scripts/build-geant4.sh \
-            scripts/build-genfit.sh \
-            scripts/muse-cmake-args.sh
+            scripts/lib/components/clhep.sh \
+            scripts/lib/components/geant4.sh \
+            scripts/lib/components/genfit.sh \
+            scripts/lib/components/muse.sh
 
   actionlint:
     name: GitHub Actions lint
@@ -174,7 +181,7 @@ jobs:
             .local/pixi-cache
             .pixi
             .install/src
-          key: ${{ runner.os }}-${{ runner.arch }}-public-builds-${{ hashFiles('pixi.toml', 'pixi.lock', 'scripts/*.sh', 'scripts/pixi-local', 'scripts/pixi-local.in') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-public-builds-${{ hashFiles('pixi.toml', 'pixi.lock', 'configs/*.sh', 'scripts/*.sh', 'scripts/**/*.sh', 'scripts/pixi-local', 'scripts/pixi-local.in') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-public-builds-
 

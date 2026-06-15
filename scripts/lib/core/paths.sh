@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Source-only path setup for repo-local build/install prefixes.
+
+# shellcheck disable=SC2034,SC2154
+
+join_by_colon() {
+  local IFS=:
+  printf '%s' "$*"
+}
+
+join_by_semicolon() {
+  local IFS=';'
+  printf '%s' "$*"
+}
+
+init_repo_paths() {
+  ROOT="$PIXI_PROJECT_ROOT"
+  SRC="$ROOT/$SOURCE_DIR"
+  BUILD="$ROOT/$BUILD_DIR"
+  STATE="$ROOT/$STATE_DIR"
+  LOGS="$ROOT/$LOG_DIR"
+  INSTALL_DIR="$ROOT/$INSTALL_DIR_REL"
+
+  XQILLA_PREFIX="$ROOT/$XQILLA_PREFIX_REL"
+  CLHEP_PREFIX="$ROOT/$CLHEP_PREFIX_REL"
+  GEANT4_PREFIX="$ROOT/$GEANT4_PREFIX_REL"
+  GENFIT_PREFIX="$ROOT/$GENFIT_PREFIX_REL"
+  MUSE_PREFIX="$ROOT/$MUSE_PREFIX_REL"
+  SHARED_PREFIX="$ROOT/$SHARED_PREFIX_REL"
+
+  mkdir -p \
+    "$SRC" "$BUILD" "$STATE" "$LOGS" "$INSTALL_DIR" \
+    "$XQILLA_PREFIX" "$CLHEP_PREFIX" "$GEANT4_PREFIX" "$GENFIT_PREFIX" "$MUSE_PREFIX"
+
+  export ROOT SRC BUILD STATE LOGS INSTALL_DIR
+  export XQILLA_PREFIX CLHEP_PREFIX GEANT4_PREFIX GENFIT_PREFIX MUSE_PREFIX SHARED_PREFIX
+}
