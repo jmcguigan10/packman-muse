@@ -54,11 +54,11 @@ jobs:
 
       - name: Check CMake prefix path form
         run: |
-          if git grep -n -- '-DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"' -- scripts; then
+          if git grep -n -- "-DCMAKE_PREFIX_PATH=\"\$CMAKE_PREFIX_PATH\"" -- scripts; then
             echo "Use CMAKE_PREFIX_PATH_CMAKE for -DCMAKE_PREFIX_PATH" >&2
             exit 1
           fi
-          git grep -n -- '-DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH_CMAKE"' -- \
+          git grep -n -- "-DCMAKE_PREFIX_PATH=\"\$CMAKE_PREFIX_PATH_CMAKE\"" -- \
             scripts/build-clhep.sh \
             scripts/build-geant4.sh \
             scripts/build-genfit.sh \

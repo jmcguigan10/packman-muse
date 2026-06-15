@@ -9,8 +9,7 @@ source "$SCRIPT_DIR/muse-cmake-args.sh"
 
 fresh=0
 case "${1:-}" in
-  "")
-    ;;
+  "") ;;
   --fresh)
     fresh=1
     ;;
