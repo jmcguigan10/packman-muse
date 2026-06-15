@@ -25,6 +25,8 @@ root_dir="${ROOT_DIR:-$(find_cmake_config_dir ROOT "$CONDA_PREFIX" "$CONDA_PREFI
 xqilla_library="${XQILLA_LIBRARY:-$(find_library_file xqilla "$XQILLA_PREFIX/lib" "$XQILLA_PREFIX/lib64" 2>/dev/null || true)}"
 lzma_library="${LZMA_LIBRARY:-$(find_library_file lzma "$CONDA_PREFIX/lib" "$CONDA_PREFIX/lib64" 2>/dev/null || true)}"
 openssl_ssl_library="${OPENSSL_SSL_LIBRARY:-$(find_library_file ssl "$CONDA_PREFIX/lib" "$CONDA_PREFIX/lib64" 2>/dev/null || true)}"
+genfit_base_dir="${GENFIT_BASE_DIR:-$SRC/genfit}"
+genfit_library="${GENFIT_LIBRARIES:-$(find_library_file genfit2 "$GENFIT_PREFIX/lib" "$GENFIT_PREFIX/lib64" "$BUILD/genfit/lib" "$BUILD/genfit/lib64" 2>/dev/null || true)}"
 
 if [ -z "$root_dir" ]; then
   echo "error: could not find ROOT CMake directory under $CONDA_PREFIX" >&2
@@ -43,6 +45,16 @@ fi
 
 if [ -z "$openssl_ssl_library" ]; then
   echo "error: could not find libssl under $CONDA_PREFIX" >&2
+  exit 2
+fi
+
+if [ ! -f "$genfit_base_dir/cmake/genfit.cmake" ]; then
+  echo "error: could not find GenFit source metadata under $genfit_base_dir" >&2
+  exit 2
+fi
+
+if [ -z "$genfit_library" ]; then
+  echo "error: could not find libgenfit2 under $GENFIT_PREFIX or $BUILD/genfit" >&2
   exit 2
 fi
 
@@ -79,6 +91,9 @@ cmake_args=(
   -DOPENSSL_BASE_DIR="$CONDA_PREFIX/include"
   -DOPENSSL_LIBRARIES="$openssl_ssl_library"
   -DGeant4_DIR="$GEANT4_PREFIX/lib/cmake/Geant4"
+  -DGENFIT_BASE_DIR="$genfit_base_dir"
+  -DGENFIT_LIBRARIES="$genfit_library"
+  -DGENFIT_LIBRARY_DIR="$(dirname "$genfit_library")"
   -DDo_G4PSI=ON
   -DDO_RADGEN=ON
   -DDO_ML=OFF
