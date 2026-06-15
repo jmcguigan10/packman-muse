@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   full-stack:
     name: Full stack
@@ -106,6 +110,8 @@ jobs:
             --exclude=.local \
             --exclude=.pixi \
             -cf - . | tar -C "$dst" -xf -
+          find "$dst" -type f \( -name '*.sh' -o -name 'pixi-local' -o -name 'pixi-local.in' \) \
+            -exec sed -i 's/\r$//' {} +
 
       - name: Configure SSH for private MUSE repos
         env:

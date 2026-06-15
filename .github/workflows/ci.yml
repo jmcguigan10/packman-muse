@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   shell-static:
     name: Shell static checks
@@ -186,6 +190,8 @@ jobs:
             --exclude=.local \
             --exclude=.pixi \
             -cf - . | tar -C "$dst" -xf -
+          find "$dst" -type f \( -name '*.sh' -o -name 'pixi-local' -o -name 'pixi-local.in' \) \
+            -exec sed -i 's/\r$//' {} +
 
       - name: Rewrite pixi.toml for WSL platform
         run: |
@@ -291,6 +297,8 @@ jobs:
             --exclude=.local \
             --exclude=.pixi \
             -cf - . | tar -C "$dst" -xf -
+          find "$dst" -type f \( -name '*.sh' -o -name 'pixi-local' -o -name 'pixi-local.in' \) \
+            -exec sed -i 's/\r$//' {} +
 
       - name: Bootstrap Pixi
         run: |
@@ -394,6 +402,8 @@ jobs:
             --exclude=.local \
             --exclude=.pixi \
             -cf - . | tar -C "$dst" -xf -
+          find "$dst" -type f \( -name '*.sh' -o -name 'pixi-local' -o -name 'pixi-local.in' \) \
+            -exec sed -i 's/\r$//' {} +
 
       - name: Bootstrap and install
         run: |
