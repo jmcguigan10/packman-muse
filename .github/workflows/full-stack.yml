@@ -92,9 +92,10 @@ jobs:
 
       - name: Copy checkout into WSL filesystem
         run: |
-          case "$GITHUB_WORKSPACE" in
-            [A-Za-z]:* | *\\*) src="$(wslpath -u "$GITHUB_WORKSPACE")" ;;
-            *) src="$GITHUB_WORKSPACE" ;;
+          workspace='${{ github.workspace }}'
+          case "$workspace" in
+            [A-Za-z]:* | *\\*) src="$(wslpath -u "$workspace")" ;;
+            *) src="$workspace" ;;
           esac
           dst="$HOME/fpb-edits-ci"
           rm -rf "$dst"
