@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# shellcheck source=env.sh
 source "$SCRIPT_DIR/env.sh"
 
 need_cmd xqilla
@@ -16,26 +17,27 @@ EOF
 xqilla "$tmp/test.xq" | grep -q "2"
 
 cat > "$tmp/link.cpp" <<'EOF'
-#include <xercesc/util/PlatformUtils.hpp>
+#include <xqilla/xqilla-simple.hpp>
 
 int main() {
-    xercesc::XMLPlatformUtils::Initialize();
-    xercesc::XMLPlatformUtils::Terminate();
-    return 0;
+  XQilla xqilla;
+  return 0;
 }
 EOF
 
 "${CXX:-c++}" \
-  -std=c++20 \
+  -std=c++14 \
   "$tmp/link.cpp" \
-  -I"$CONDA_PREFIX/include" \
   -I"$XQILLA_PREFIX/include" \
-  -L"$CONDA_PREFIX/lib" \
+  -I"$CONDA_PREFIX/include" \
   -L"$XQILLA_PREFIX/lib" \
+  -L"$CONDA_PREFIX/lib" \
+  -Wl,-rpath,"$XQILLA_PREFIX/lib" \
+  -Wl,-rpath,"$CONDA_PREFIX/lib" \
   -lxqilla \
   -lxerces-c \
-  -o "$tmp/link"
+  -o "$tmp/link-test"
 
-"$tmp/link"
+"$tmp/link-test"
 
 echo "xqilla probe passed"

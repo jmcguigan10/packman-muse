@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# shellcheck source=env.sh
 source "$SCRIPT_DIR/env.sh"
 
 stage="clhep"
@@ -28,7 +29,7 @@ mkdir -p "$builddir"
 
 cmake -S "$cmake_source" -B "$builddir" -G "$CMAKE_GENERATOR" \
   -DCMAKE_INSTALL_PREFIX="$CLHEP_PREFIX" \
-  -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH" \
+  -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH_CMAKE" \
   -DCMAKE_C_COMPILER="$CC" \
   -DCMAKE_CXX_COMPILER="$CXX" \
   -DCMAKE_BUILD_TYPE="$CMAKE_BUILD_TYPE" \

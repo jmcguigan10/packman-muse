@@ -48,8 +48,8 @@ SSH behavior works.
 
 ## What bootstrap creates
 
-`scripts/bootstrap-pixi.sh` installs Pixi locally and writes
-`scripts/pixi-local`.
+`scripts/bootstrap-pixi.sh` installs Pixi locally and installs
+`scripts/pixi-local` from the committed `scripts/pixi-local.in` template.
 
 Important generated paths:
 
@@ -144,6 +144,30 @@ Useful commands:
 ./scripts/pixi-local run -e batch build-genfit
 ./scripts/pixi-local run -e batch build-muse
 ./scripts/pixi-local run -e batch build-stack
+```
+
+For interactive MUSE configuration, do not run raw `ccmake` against the MUSE
+source tree. Use the wrapper so CMake receives the same local Pixi/source-built
+paths as `build-muse`:
+
+```bash
+./scripts/pixi-local run -e batch ccmake-muse
+```
+
+If you change anything in `ccmake`, build and install that configured tree with:
+
+```bash
+./scripts/pixi-local run -e batch install-configured-muse
+```
+
+`build-muse` recreates `.install/build/muse` from the pinned defaults. Use it
+for the standard reproducible build, not for preserving manual `ccmake` edits.
+
+If a previous configure picked up Homebrew, Spack, `/usr/local`, or `~/.muse`,
+discard that polluted cache first:
+
+```bash
+./scripts/pixi-local run -e batch bash scripts/ccmake-muse.sh --fresh
 ```
 
 Build stamps live in `.install/state`. If a stage already has a stamp, the

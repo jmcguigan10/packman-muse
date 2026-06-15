@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# shellcheck source=env.sh
 source "$SCRIPT_DIR/env.sh"
 
 stage="xqilla"
@@ -9,8 +10,16 @@ stamp_has "$stage" && {
   exit 0
 }
 
-version="${XQILLA_VERSION:-2.3.4}"
+default_version="2.3.4"
+default_url="https://sourceforge.net/projects/xqilla/files/XQilla-${default_version}.tar.gz/download"
+default_sha256="292631791631fe2e7eb9727377335063a48f12611d641d0296697e0c075902eb"
+
+version="${XQILLA_VERSION:-$default_version}"
 url="${XQILLA_URL:-https://sourceforge.net/projects/xqilla/files/XQilla-${version}.tar.gz/download}"
+sha256="${XQILLA_SHA256:-}"
+if [ -z "$sha256" ] && [ "$version" = "$default_version" ] && [ "$url" = "$default_url" ]; then
+  sha256="$default_sha256"
+fi
 
 archive="$SRC/XQilla-${version}.tar.gz"
 srcdir="$SRC/XQilla-${version}"
@@ -18,6 +27,7 @@ srcdir="$SRC/XQilla-${version}"
 if [ ! -f "$archive" ]; then
   curl -fL "$url" -o "$archive"
 fi
+verify_sha256 "$archive" "$sha256"
 
 rm -rf "$srcdir"
 mkdir -p "$srcdir"
@@ -27,6 +37,7 @@ refresh_gnuconfig_file() {
   local name="$1"
   local replacement=""
   local target
+  local candidate
 
   for candidate in \
     "$CONDA_PREFIX/share/gnuconfig/$name" \

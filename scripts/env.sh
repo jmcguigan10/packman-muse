@@ -169,12 +169,38 @@ configure_muse_runtime() {
 
 configure_muse_runtime
 
-LOCAL_CMAKE_PREFIXES="$XQILLA_PREFIX:$CLHEP_PREFIX:$GEANT4_PREFIX:$GENFIT_PREFIX:$MUSE_PREFIX"
+join_by_colon() {
+  local IFS=:
+  printf '%s' "$*"
+}
+
+join_by_semicolon() {
+  local IFS=';'
+  printf '%s' "$*"
+}
+
+LOCAL_PREFIXES=(
+  "$XQILLA_PREFIX"
+  "$CLHEP_PREFIX"
+  "$GEANT4_PREFIX"
+  "$GENFIT_PREFIX"
+  "$MUSE_PREFIX"
+  "$CONDA_PREFIX"
+)
+
+PREEXISTING_CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}"
+LOCAL_CMAKE_PREFIXES_ENV="$(join_by_colon "${LOCAL_PREFIXES[@]}")"
+LOCAL_CMAKE_PREFIXES_CMAKE="$(join_by_semicolon "${LOCAL_PREFIXES[@]}")"
 LOCAL_PKG_CONFIG_PATHS="$XQILLA_PREFIX/lib/pkgconfig:$XQILLA_PREFIX/share/pkgconfig:$CLHEP_PREFIX/lib/pkgconfig:$CLHEP_PREFIX/share/pkgconfig:$GEANT4_PREFIX/lib/pkgconfig:$GEANT4_PREFIX/share/pkgconfig:$GENFIT_PREFIX/lib/pkgconfig:$GENFIT_PREFIX/share/pkgconfig:$MUSE_PREFIX/lib/pkgconfig:$MUSE_PREFIX/share/pkgconfig"
 LOCAL_BINS="$XQILLA_PREFIX/bin:$CLHEP_PREFIX/bin:$GEANT4_PREFIX/bin:$GENFIT_PREFIX/bin:$MUSE_PREFIX/bin"
 LOCAL_LIBS="$XQILLA_PREFIX/lib:$XQILLA_PREFIX/lib64:$CLHEP_PREFIX/lib:$CLHEP_PREFIX/lib64:$GEANT4_PREFIX/lib:$GEANT4_PREFIX/lib64:$GENFIT_PREFIX/lib:$GENFIT_PREFIX/lib64:$MUSE_PREFIX/lib:$MUSE_PREFIX/lib64"
 
-export CMAKE_PREFIX_PATH="$LOCAL_CMAKE_PREFIXES:$CONDA_PREFIX${CMAKE_PREFIX_PATH:+:$CMAKE_PREFIX_PATH}"
+export CMAKE_PREFIX_PATH="$LOCAL_CMAKE_PREFIXES_ENV${PREEXISTING_CMAKE_PREFIX_PATH:+:$PREEXISTING_CMAKE_PREFIX_PATH}"
+CMAKE_PREFIX_PATH_CMAKE="$LOCAL_CMAKE_PREFIXES_CMAKE"
+if [ -n "$PREEXISTING_CMAKE_PREFIX_PATH" ]; then
+  CMAKE_PREFIX_PATH_CMAKE="$CMAKE_PREFIX_PATH_CMAKE;$(printf '%s' "$PREEXISTING_CMAKE_PREFIX_PATH" | tr ':' ';')"
+fi
+export CMAKE_PREFIX_PATH_CMAKE
 export PKG_CONFIG_PATH="$LOCAL_PKG_CONFIG_PATHS:$CONDA_PREFIX/lib/pkgconfig:$CONDA_PREFIX/share/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 export PATH="$LOCAL_BINS:$CONDA_PREFIX/bin:$PATH"
 
@@ -271,11 +297,24 @@ need_cmd() {
   }
 }
 
+verify_sha256() {
+  local file="$1"
+  local expected="$2"
+
+  if [ -z "$expected" ]; then
+    echo "error: missing SHA256 for $file" >&2
+    exit 2
+  fi
+
+  printf '%s  %s\n' "$expected" "$file" | shasum -a 256 -c -
+}
+
 checkout_git_source() {
   local repo="$1"
   local srcdir="$2"
   local ref="${3:-}"
   local sha="${4:-}"
+  local current_url
 
   if [ ! -d "$srcdir/.git" ]; then
     if [ -n "$ref" ]; then
@@ -285,12 +324,20 @@ checkout_git_source() {
     fi
   fi
 
+  current_url="$(git -C "$srcdir" remote get-url origin 2>/dev/null || true)"
+  if [ "$current_url" != "$repo" ]; then
+    echo "error: $srcdir origin is '$current_url', expected '$repo'" >&2
+    echo "hint: remove '$srcdir' or run:" >&2
+    echo "  git -C '$srcdir' remote set-url origin '$repo'" >&2
+    exit 2
+  fi
+
   if [ -n "$sha" ]; then
     local current
     current="$(git -C "$srcdir" rev-parse HEAD)"
     if [ "$current" != "$sha" ]; then
-      git -C "$srcdir" fetch --depth="${GIT_DEPTH:-1}" origin "$sha" \
-        || git -C "$srcdir" fetch origin "${ref:-HEAD}"
+      git -C "$srcdir" fetch --tags --depth="${GIT_DEPTH:-1}" origin "${ref:-$sha}" \
+        || git -C "$srcdir" fetch --tags origin "${ref:-$sha}"
       git -C "$srcdir" checkout --detach "$sha"
     fi
   fi

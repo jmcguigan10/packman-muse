@@ -22,6 +22,7 @@ url = "https://sourceforge.net/projects/xqilla/files/XQilla-2.3.4.tar.gz/downloa
 version = "2.3.4"
 root = "XQilla-2.3.4"
 tarball = "XQilla-2.3.4.tar.gz"
+sha256 = "292631791631fe2e7eb9727377335063a48f12611d641d0296697e0c075902eb"
 
 [build.xqilla]
 type = "configure"
@@ -51,6 +52,7 @@ url = "https://gitlab.cern.ch/geant4/geant4/-/archive/v11.4.1/geant4-v11.4.1.tar
 version = "11.4.1"
 root = "geant4-v11.4.1"
 tarball = "geant4-v11.4.1.tar.gz"
+sha256 = "99dcf5f9d4f806fb8c4fde85cb2674a42e4ca19833143464ff7efa55c1852140"
 
 [build.geant4]
 type = "cmake"
@@ -110,10 +112,16 @@ cmake_args = [
     "-DXQILLA_LIBRARY_DIR={prefix.xqilla}/lib",
     "-DXQILLA_LIBRARY={xqilla_library}",
     "-DXercesC_ROOT={env_root}",
-    "-DLZMA_BASE_DIR={env_root}/include",
+    "-DXERCESC_ROOT_DIR={env_root}",
+    "-DLZMA_BASE_DIR={env_root}",
+    "-DLZMA_INCLUDE_DIR={env_root}/include",
     "-DLZMA_LIBRARIES={lzma_library}",
-    "-DOPENSSL_BASE_DIR={env_root}/include",
-    "-DOPENSSL_LIBRARIES={openssl_ssl_library}",
+    "-DOPENSSL_BASE_DIR={env_root}",
+    "-DOPENSSL_ROOT_DIR={env_root}",
+    "-DOPENSSL_INCLUDE_DIR={env_root}/include",
+    "-DOPENSSL_SSL_LIBRARY={openssl_ssl_library}",
+    "-DOPENSSL_CRYPTO_LIBRARY={openssl_crypto_library}",
+    "-DOPENSSL_LIBRARIES={openssl_libraries}",
     "-DGeant4_DIR={prefix.geant4}/lib/cmake/Geant4",
     "-DDo_G4PSI=ON",
     "-DDO_RADGEN=ON",

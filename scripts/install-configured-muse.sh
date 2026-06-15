@@ -1,27 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 # shellcheck source=env.sh
 source "$SCRIPT_DIR/env.sh"
 # shellcheck source=muse-cmake-args.sh
 source "$SCRIPT_DIR/muse-cmake-args.sh"
 
-stage="muse"
-stamp_has "$stage" && {
-  echo "$stage already built"
-  exit 0
-}
+if [ ! -f "$MUSE_BUILDDIR/CMakeCache.txt" ]; then
+  echo "error: no configured MUSE build tree at $MUSE_BUILDDIR" >&2
+  echo "hint: run ./scripts/pixi-local run -e batch ccmake-muse first" >&2
+  exit 2
+fi
 
-prepare_muse_source
-
-rm -rf "$MUSE_BUILDDIR"
-mkdir -p "$MUSE_BUILDDIR"
-
-prepare_muse_cmake_args
-
-cmake -S "$MUSE_SRCDIR" -B "$MUSE_BUILDDIR" -G "$CMAKE_GENERATOR" "${MUSE_CMAKE_ARGS[@]}"
 cmake --build "$MUSE_BUILDDIR" --parallel "$JOBS"
 cmake --install "$MUSE_BUILDDIR"
 
-stamp_done "$stage"
-echo "$stage built into $MUSE_PREFIX"
+stamp_done muse
+echo "muse built into $MUSE_PREFIX"

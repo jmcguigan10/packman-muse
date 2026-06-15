@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# shellcheck source=env.sh
 source "$SCRIPT_DIR/env.sh"
 
 stage="genfit"
@@ -25,7 +26,7 @@ root_dir="${ROOT_DIR:-$(find_cmake_config_dir ROOT "$CONDA_PREFIX" "$CONDA_PREFI
 
 cmake_args=(
   -DCMAKE_INSTALL_PREFIX="$GENFIT_PREFIX"
-  -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"
+  -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH_CMAKE"
   -DCMAKE_C_COMPILER="$CC"
   -DCMAKE_CXX_COMPILER="$CXX"
   -DCMAKE_BUILD_TYPE="$CMAKE_BUILD_TYPE"

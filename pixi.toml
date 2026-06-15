@@ -63,6 +63,8 @@ build-geant4 = { cmd = "bash scripts/build-geant4.sh", depends-on = ["build-clhe
 build-genfit = { cmd = "bash scripts/build-genfit.sh", depends-on = ["probe-host", "init-prefix"] }
 
 build-muse = { cmd = "bash scripts/build-muse.sh", depends-on = ["probe-xqilla", "build-geant4", "build-genfit"] }
+ccmake-muse = { cmd = "bash scripts/ccmake-muse.sh", depends-on = ["probe-xqilla", "build-geant4", "build-genfit"] }
+install-configured-muse = "bash scripts/install-configured-muse.sh"
 
 build-stack = { depends-on = ["build-muse"] }
 

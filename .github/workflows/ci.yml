@@ -1,0 +1,193 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shell-static:
+    name: Shell static checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shell tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck shfmt
+
+      - name: Bash syntax check
+        run: bash -n scripts/*.sh scripts/pixi-local scripts/pixi-local.in
+
+      - name: ShellCheck
+        run: shellcheck -x scripts/*.sh scripts/pixi-local scripts/pixi-local.in
+
+      - name: shfmt check
+        run: shfmt -d -i 2 -ci scripts/*.sh scripts/pixi-local scripts/pixi-local.in
+
+      - name: Executable bit check
+        run: |
+          test -x scripts/bootstrap-pixi.sh
+          test -x scripts/pixi-local
+          test -x scripts/pixi-local.in
+          test -x scripts/pixi-use-current-platform.sh
+          test -x scripts/probe-host.sh
+          test -x scripts/probe-xqilla.sh
+          test -x scripts/build-xqilla.sh
+          test -x scripts/build-clhep.sh
+          test -x scripts/build-geant4.sh
+          test -x scripts/build-genfit.sh
+          test -x scripts/build-muse.sh
+          test -x scripts/ccmake-muse.sh
+          test -x scripts/install-configured-muse.sh
+          test -x scripts/muse-cmake-args.sh
+          test -x scripts/stack-shell.sh
+
+      - name: Check pixi-local template drift
+        run: cmp -s scripts/pixi-local.in scripts/pixi-local
+
+      - name: Check CMake prefix path form
+        run: |
+          if git grep -n -- '-DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH"' -- scripts; then
+            echo "Use CMAKE_PREFIX_PATH_CMAKE for -DCMAKE_PREFIX_PATH" >&2
+            exit 1
+          fi
+          git grep -n -- '-DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH_CMAKE"' -- \
+            scripts/build-clhep.sh \
+            scripts/build-geant4.sh \
+            scripts/build-genfit.sh \
+            scripts/muse-cmake-args.sh
+
+  actionlint:
+    name: GitHub Actions lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install actionlint
+        run: bash <(curl -s https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+
+      - name: Lint workflows
+        run: ./actionlint
+
+  platform-rewrite:
+    name: Platform rewrite
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            expected_platform: linux-64
+          - os: macos-14
+            expected_platform: osx-arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rewrite pixi.toml for host platform
+        run: |
+          bash scripts/pixi-use-current-platform.sh pixi.toml
+
+          grep -F "platforms = [\"${{ matrix.expected_platform }}\"]" pixi.toml
+          grep -F "[target.${{ matrix.expected_platform }}.dependencies]" pixi.toml
+
+      - name: Rewrite is idempotent
+        run: |
+          cp pixi.toml pixi.after-first.toml
+          bash scripts/pixi-use-current-platform.sh pixi.toml
+          cmp -s pixi.after-first.toml pixi.toml
+
+      - name: Only one active target dependency block remains
+        run: |
+          count="$(grep -Ec '^\[target\.(linux-64|linux-aarch64|osx-64|osx-arm64)\.dependencies\]' pixi.toml)"
+          test "$count" -eq 1
+
+  pixi-bootstrap:
+    name: Pixi bootstrap and dependency solve
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache local Pixi install and package cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .local/bin/pixi
+            .local/pixi-home
+            .local/pixi-cache
+            .pixi
+          key: ${{ runner.os }}-${{ runner.arch }}-pixi-${{ hashFiles('pixi.toml', 'pixi.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-pixi-
+
+      - name: Bootstrap Pixi
+        run: |
+          bash scripts/bootstrap-pixi.sh
+          test -x .local/bin/pixi
+          test -x scripts/pixi-local
+          ./scripts/pixi-local --version
+
+      - name: Install Pixi environment
+        run: ./scripts/pixi-local install
+
+      - name: Host probe
+        run: ./scripts/pixi-local run -e batch probe-host
+
+  public-dependency-builds:
+    name: Public dependency builds
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Pixi and source downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            .local/bin/pixi
+            .local/pixi-home
+            .local/pixi-cache
+            .pixi
+            .install/src
+          key: ${{ runner.os }}-${{ runner.arch }}-public-builds-${{ hashFiles('pixi.toml', 'pixi.lock', 'scripts/*.sh', 'scripts/pixi-local', 'scripts/pixi-local.in') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-public-builds-
+
+      - name: Bootstrap and install
+        run: |
+          bash scripts/bootstrap-pixi.sh
+          ./scripts/pixi-local install
+
+      - name: Build XQilla
+        run: ./scripts/pixi-local run -e batch build-xqilla
+
+      - name: Probe XQilla
+        run: ./scripts/pixi-local run -e batch probe-xqilla
+
+      - name: Build CLHEP
+        run: ./scripts/pixi-local run -e batch build-clhep
