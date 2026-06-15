@@ -43,7 +43,7 @@ jobs:
             .local/pixi-cache
             .pixi
             .install/src
-          key: ${{ runner.os }}-${{ runner.arch }}-full-stack-${{ hashFiles('pixi.toml', 'pixi.lock', 'configs/*.sh', 'scripts/*.sh', 'scripts/**/*.sh', 'scripts/pixi-local', 'scripts/pixi-local.in') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-full-stack-${{ hashFiles('pixi.toml', 'pixi.lock', 'configs/*.sh', 'scripts/*.sh', 'scripts/**/*.sh', 'scripts/python/*.py', 'scripts/pixi-local', 'scripts/pixi-local.in') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-full-stack-
 
@@ -62,37 +62,4 @@ jobs:
 
       - name: Runtime dependency audit
         shell: bash
-        run: |
-          set -euo pipefail
-
-          candidate=""
-          for path in \
-            .local/bin/muse/bin/g4PSI \
-            .local/bin/muse/bin/*
-          do
-            if [ -x "$path" ]; then
-              candidate="$path"
-              break
-            fi
-          done
-
-          if [ -z "$candidate" ]; then
-            echo "error: could not find installed MUSE executable to audit" >&2
-            exit 2
-          fi
-
-          echo "Auditing $candidate"
-
-          if [ "${RUNNER_OS:-}" = "macOS" ]; then
-            otool -L "$candidate" | tee deps.txt
-            otool -l "$candidate" | grep -A3 LC_RPATH || true
-          else
-            ldd "$candidate" | tee deps.txt
-          fi
-
-          forbidden='(/opt/homebrew|/usr/local|/home/linuxbrew|/sw/|/opt/local|spack)'
-
-          if grep -E "$forbidden" deps.txt; then
-            echo "error: runtime dependency leaked from forbidden system prefix" >&2
-            exit 2
-          fi
+        run: ./scripts/pixi-local run -e batch python scripts/python/audit_runtime_deps.py

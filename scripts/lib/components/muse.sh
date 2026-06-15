@@ -16,46 +16,26 @@ prepare_muse_cmake_args() {
   local lzma_library
   local openssl_ssl_library
   local openssl_crypto_library
-  local openssl_libraries
   local genfit_base_dir
   local genfit_library
+  local muse_rpath
 
   root_dir="${ROOT_DIR:-$(find_cmake_config_dir ROOT "$CONDA_PREFIX" "$CONDA_PREFIX/cmake" "$CONDA_PREFIX/lib" "$CONDA_PREFIX/lib64" 2>/dev/null || true)}"
   xqilla_library="${XQILLA_LIBRARY:-$(find_library_file xqilla "$XQILLA_PREFIX/lib" "$XQILLA_PREFIX/lib64" 2>/dev/null || true)}"
   lzma_library="${LZMA_LIBRARY:-$(find_library_file lzma "$CONDA_PREFIX/lib" "$CONDA_PREFIX/lib64" 2>/dev/null || true)}"
   openssl_ssl_library="${OPENSSL_SSL_LIBRARY:-$(find_library_file ssl "$CONDA_PREFIX/lib" "$CONDA_PREFIX/lib64" 2>/dev/null || true)}"
   openssl_crypto_library="${OPENSSL_CRYPTO_LIBRARY:-$(find_library_file crypto "$CONDA_PREFIX/lib" "$CONDA_PREFIX/lib64" 2>/dev/null || true)}"
-  openssl_libraries="$openssl_ssl_library;$openssl_crypto_library"
   genfit_base_dir="${GENFIT_BASE_DIR:-$SRC/genfit}"
   genfit_library="${GENFIT_LIBRARIES:-$(find_library_file genfit2 "$GENFIT_PREFIX/lib" "$GENFIT_PREFIX/lib64" "$BUILD/genfit/lib" "$BUILD/genfit/lib64" 2>/dev/null || true)}"
+  muse_rpath="$(join_by_semicolon "$XQILLA_PREFIX/lib" "$CLHEP_PREFIX/lib" "$GEANT4_PREFIX/lib" "$GENFIT_PREFIX/lib" "$MUSE_PREFIX/lib")"
 
-  if [ -z "$root_dir" ]; then
-    die "could not find ROOT CMake directory under $CONDA_PREFIX"
-  fi
-
-  if [ -z "$xqilla_library" ]; then
-    die "could not find libxqilla under $XQILLA_PREFIX"
-  fi
-
-  if [ -z "$lzma_library" ]; then
-    die "could not find liblzma under $CONDA_PREFIX"
-  fi
-
-  if [ -z "$openssl_ssl_library" ]; then
-    die "could not find libssl under $CONDA_PREFIX"
-  fi
-
-  if [ -z "$openssl_crypto_library" ]; then
-    die "could not find libcrypto under $CONDA_PREFIX"
-  fi
-
-  if [ ! -f "$genfit_base_dir/cmake/genfit.cmake" ]; then
-    die "could not find GenFit source metadata under $genfit_base_dir"
-  fi
-
-  if [ -z "$genfit_library" ]; then
-    die "could not find libgenfit2 under $GENFIT_PREFIX or $BUILD/genfit"
-  fi
+  require_nonempty "$root_dir" "could not find ROOT CMake directory under $CONDA_PREFIX"
+  require_nonempty "$xqilla_library" "could not find libxqilla under $XQILLA_PREFIX"
+  require_nonempty "$lzma_library" "could not find liblzma under $CONDA_PREFIX"
+  require_nonempty "$openssl_ssl_library" "could not find libssl under $CONDA_PREFIX"
+  require_nonempty "$openssl_crypto_library" "could not find libcrypto under $CONDA_PREFIX"
+  require_file "$genfit_base_dir/cmake/genfit.cmake" "could not find GenFit source metadata under $genfit_base_dir"
+  require_nonempty "$genfit_library" "could not find libgenfit2 under $GENFIT_PREFIX or $BUILD/genfit"
 
   MUSE_CMAKE_ARGS=(
     -DCMAKE_INSTALL_PREFIX="$MUSE_PREFIX"
@@ -65,7 +45,7 @@ prepare_muse_cmake_args() {
     -DCMAKE_BUILD_TYPE="$CMAKE_BUILD_TYPE"
     -DCMAKE_CXX_STANDARD="$CMAKE_CXX_STANDARD"
     -DCMAKE_CXX_STANDARD_REQUIRED=ON
-    "-DCMAKE_INSTALL_RPATH=$XQILLA_PREFIX/lib;$CLHEP_PREFIX/lib;$GEANT4_PREFIX/lib;$GENFIT_PREFIX/lib;$MUSE_PREFIX/lib"
+    "-DCMAKE_INSTALL_RPATH=$muse_rpath"
     -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF
     -DCMAKE_FIND_USE_PACKAGE_REGISTRY=FALSE
     -DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=FALSE
@@ -93,7 +73,7 @@ prepare_muse_cmake_args() {
     -DOPENSSL_INCLUDE_DIR="$CONDA_PREFIX/include"
     -DOPENSSL_SSL_LIBRARY="$openssl_ssl_library"
     -DOPENSSL_CRYPTO_LIBRARY="$openssl_crypto_library"
-    -DOPENSSL_LIBRARIES="$openssl_libraries"
+    "-DOPENSSL_LIBRARIES=$openssl_ssl_library;$openssl_crypto_library"
     -DGeant4_DIR="$GEANT4_PREFIX/lib/cmake/Geant4"
     -DGENFIT_BASE_DIR="$genfit_base_dir"
     -DGENFIT_LIBRARIES="$genfit_library"

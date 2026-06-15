@@ -1,7 +1,30 @@
 #!/usr/bin/env bash
-# Source-only path setup for repo-local build/install prefixes.
+# Shared logging, path, stamp, and checksum helpers.
 
 # shellcheck disable=SC2034,SC2154
+
+die() {
+  echo "error: $*" >&2
+  exit 2
+}
+
+warn() {
+  echo "warning: $*" >&2
+}
+
+need_cmd() {
+  command -v "$1" >/dev/null 2>&1 || die "missing command: $1"
+}
+
+require_nonempty() {
+  local value="$1"
+  local message="$2"
+  [ -n "$value" ] || die "$message"
+}
+
+require_file() {
+  [ -f "$1" ] || die "$2"
+}
 
 join_by_colon() {
   local IFS=:
@@ -34,4 +57,20 @@ init_repo_paths() {
 
   export ROOT SRC BUILD STATE LOGS INSTALL_DIR
   export XQILLA_PREFIX CLHEP_PREFIX GEANT4_PREFIX GENFIT_PREFIX MUSE_PREFIX SHARED_PREFIX
+}
+
+stamp_done() {
+  touch "$STATE/$1.done"
+}
+
+stamp_has() {
+  test -f "$STATE/$1.done"
+}
+
+verify_sha256() {
+  local file="$1"
+  local expected="$2"
+
+  require_nonempty "$expected" "missing SHA256 for $file"
+  printf '%s  %s\n' "$expected" "$file" | shasum -a 256 -c -
 }

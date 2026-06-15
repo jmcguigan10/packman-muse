@@ -42,6 +42,7 @@ jobs:
       - name: Executable bit check
         run: |
           test -x scripts/bootstrap-pixi.sh
+          test -x scripts/dispatch.sh
           test -x scripts/pixi-local
           test -x scripts/pixi-local.in
           test -x scripts/pixi-use-current-platform.sh
@@ -70,6 +71,24 @@ jobs:
             scripts/lib/components/geant4.sh \
             scripts/lib/components/genfit.sh \
             scripts/lib/components/muse.sh
+
+  python-tooling:
+    name: Python tooling
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Python unit tests
+        run: python -m unittest discover -s tests/python
+
+      - name: Repo contract validation
+        run: python scripts/python/validate_repo_contract.py
 
   actionlint:
     name: GitHub Actions lint
@@ -181,7 +200,7 @@ jobs:
             .local/pixi-cache
             .pixi
             .install/src
-          key: ${{ runner.os }}-${{ runner.arch }}-public-builds-${{ hashFiles('pixi.toml', 'pixi.lock', 'configs/*.sh', 'scripts/*.sh', 'scripts/**/*.sh', 'scripts/pixi-local', 'scripts/pixi-local.in') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-public-builds-${{ hashFiles('pixi.toml', 'pixi.lock', 'configs/*.sh', 'scripts/*.sh', 'scripts/**/*.sh', 'scripts/python/*.py', 'scripts/pixi-local', 'scripts/pixi-local.in') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-public-builds-
 
