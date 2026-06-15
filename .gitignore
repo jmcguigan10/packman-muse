@@ -2,3 +2,5 @@
 .install/
 .local/*
 pixi.lock
+sim-relay/
+runs/
