@@ -4,3 +4,4 @@
 pixi.lock
 sim-relay/
 runs/
+__pycache__

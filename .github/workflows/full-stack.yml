@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   full-stack:
     name: Full stack
@@ -20,6 +24,7 @@ jobs:
         include:
           - os: ubuntu-latest
           - os: macos-14
+          - os: macos-15-intel
 
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +48,7 @@ jobs:
             .local/pixi-cache
             .pixi
             .install/src
-          key: ${{ runner.os }}-${{ runner.arch }}-full-stack-${{ hashFiles('pixi.toml', 'pixi.lock', 'configs/*.sh', 'scripts/*.sh', 'scripts/**/*.sh', 'scripts/pixi-local', 'scripts/pixi-local.in') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-full-stack-${{ hashFiles('pixi.toml', 'pixi.lock', 'configs/*.sh', 'scripts/*.sh', 'scripts/**/*.sh', 'scripts/python/*.py', 'scripts/pixi-local', 'scripts/pixi-local.in') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-full-stack-
 
@@ -62,37 +67,79 @@ jobs:
 
       - name: Runtime dependency audit
         shell: bash
+        run: ./scripts/pixi-local run -e batch python scripts/python/audit_runtime_deps.py
+
+  wsl-full-stack:
+    name: WSL full stack
+    runs-on: windows-2022
+    timeout-minutes: 420
+
+    defaults:
+      run:
+        shell: wsl-bash {0}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up WSL2 Ubuntu
+        uses: Vampire/setup-wsl@v7
+        with:
+          distribution: Ubuntu-24.04
+          wsl-version: 2
+          additional-packages: |
+            ca-certificates
+            curl
+            git
+            gzip
+            openssh-client
+            tar
+
+      - name: Copy checkout into WSL filesystem
         run: |
-          set -euo pipefail
+          workspace='${{ github.workspace }}'
+          case "$workspace" in
+            [A-Za-z]:* | *\\*) src="$(wslpath -u "$workspace")" ;;
+            *) src="$workspace" ;;
+          esac
+          dst="$HOME/fpb-edits-ci"
+          rm -rf "$dst"
+          mkdir -p "$dst"
+          tar -C "$src" \
+            --exclude=.git \
+            --exclude=.install \
+            --exclude=.local \
+            --exclude=.pixi \
+            -cf - . | tar -C "$dst" -xf -
+          find "$dst" -type f \( -name '*.sh' -o -name 'pixi-local' -o -name 'pixi-local.in' \) \
+            -exec sed -i 's/\r$//' {} +
 
-          candidate=""
-          for path in \
-            .local/bin/muse/bin/g4PSI \
-            .local/bin/muse/bin/*
-          do
-            if [ -x "$path" ]; then
-              candidate="$path"
-              break
-            fi
-          done
+      - name: Configure SSH for private MUSE repos
+        env:
+          MUSE_DEPLOY_KEY: ${{ secrets.MUSE_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$MUSE_DEPLOY_KEY" >~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >>~/.ssh/known_hosts
 
-          if [ -z "$candidate" ]; then
-            echo "error: could not find installed MUSE executable to audit" >&2
-            exit 2
-          fi
+      - name: Bootstrap and install
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          bash scripts/bootstrap-pixi.sh
+          ./scripts/pixi-local install
 
-          echo "Auditing $candidate"
+      - name: Build full stack
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          ./scripts/pixi-local run -e batch build-stack
 
-          if [ "${RUNNER_OS:-}" = "macOS" ]; then
-            otool -L "$candidate" | tee deps.txt
-            otool -l "$candidate" | grep -A3 LC_RPATH || true
-          else
-            ldd "$candidate" | tee deps.txt
-          fi
+      - name: Probe final environment
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          ./scripts/pixi-local run -e batch probe-host
+          ./scripts/pixi-local run -e batch probe-xqilla
 
-          forbidden='(/opt/homebrew|/usr/local|/home/linuxbrew|/sw/|/opt/local|spack)'
-
-          if grep -E "$forbidden" deps.txt; then
-            echo "error: runtime dependency leaked from forbidden system prefix" >&2
-            exit 2
-          fi
+      - name: Runtime dependency audit
+        run: |
+          cd "$HOME/fpb-edits-ci"
+          ./scripts/pixi-local run -e batch python scripts/python/audit_runtime_deps.py
