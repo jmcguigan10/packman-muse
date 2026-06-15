@@ -5,8 +5,4 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 # shellcheck source=scripts/env.sh
 source "$SCRIPT_DIR/env.sh"
 
-if [ "$#" -gt 0 ]; then
-  exec "$@"
-fi
-
-exec "${SHELL:-bash}"
+install_configured_muse

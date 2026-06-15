@@ -1,0 +1,98 @@
+name: Full stack build
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  full-stack:
+    name: Full stack
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 360
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH for private MUSE repos
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.MUSE_DEPLOY_KEY }}
+
+      - name: Trust GitHub SSH host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Cache Pixi and source downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            .local/bin/pixi
+            .local/pixi-home
+            .local/pixi-cache
+            .pixi
+            .install/src
+          key: ${{ runner.os }}-${{ runner.arch }}-full-stack-${{ hashFiles('pixi.toml', 'pixi.lock', 'configs/*.sh', 'scripts/*.sh', 'scripts/**/*.sh', 'scripts/pixi-local', 'scripts/pixi-local.in') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-full-stack-
+
+      - name: Bootstrap and install
+        run: |
+          bash scripts/bootstrap-pixi.sh
+          ./scripts/pixi-local install
+
+      - name: Build full stack
+        run: ./scripts/pixi-local run -e batch build-stack
+
+      - name: Probe final environment
+        run: |
+          ./scripts/pixi-local run -e batch probe-host
+          ./scripts/pixi-local run -e batch probe-xqilla
+
+      - name: Runtime dependency audit
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          candidate=""
+          for path in \
+            .local/bin/muse/bin/g4PSI \
+            .local/bin/muse/bin/*
+          do
+            if [ -x "$path" ]; then
+              candidate="$path"
+              break
+            fi
+          done
+
+          if [ -z "$candidate" ]; then
+            echo "error: could not find installed MUSE executable to audit" >&2
+            exit 2
+          fi
+
+          echo "Auditing $candidate"
+
+          if [ "${RUNNER_OS:-}" = "macOS" ]; then
+            otool -L "$candidate" | tee deps.txt
+            otool -l "$candidate" | grep -A3 LC_RPATH || true
+          else
+            ldd "$candidate" | tee deps.txt
+          fi
+
+          forbidden='(/opt/homebrew|/usr/local|/home/linuxbrew|/sw/|/opt/local|spack)'
+
+          if grep -E "$forbidden" deps.txt; then
+            echo "error: runtime dependency leaked from forbidden system prefix" >&2
+            exit 2
+          fi

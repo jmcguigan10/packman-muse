@@ -48,8 +48,8 @@ SSH behavior works.
 
 ## What bootstrap creates
 
-`scripts/bootstrap-pixi.sh` installs Pixi locally and writes
-`scripts/pixi-local`.
+`scripts/bootstrap-pixi.sh` installs Pixi locally and installs
+`scripts/pixi-local` from the committed `scripts/pixi-local.in` template.
 
 Important generated paths:
 
@@ -129,6 +129,29 @@ The runtime environment puts local source-built prefixes first, then the Pixi
 environment. It also sets `COOKERHOME` so g4PSI can find the installed MUSE
 shared data at `.local/bin/.muse/shared`.
 
+## Script organization
+
+Top-level files under `scripts/` are public command entrypoints used by Pixi
+tasks and README examples. Keep those filenames stable.
+
+Source-only defaults live in `configs/*.sh`. These files should only assign
+overridable variables such as source URLs, pinned SHAs, install-prefix names,
+and CMake defaults.
+
+Reusable shell functions live under `scripts/lib/`:
+
+```text
+core/          logging, paths, stamps, checksums
+platform/      platform detection, toolchain, Pixi manifest rewrite
+build/         downloads, Git checkout, CMake/library discovery, runtime env
+pixi/          Pixi bootstrap and wrapper helpers
+components/    XQilla, CLHEP, Geant4, GenFit, MUSE, probes
+```
+
+The main environment loader is `scripts/env.sh`. It sources configs and libs,
+sets up the repo-local Pixi/source-built environment, then exposes component
+functions to the top-level entrypoints.
+
 ## Build control
 
 The task graph is defined in `pixi.toml`.
@@ -144,6 +167,30 @@ Useful commands:
 ./scripts/pixi-local run -e batch build-genfit
 ./scripts/pixi-local run -e batch build-muse
 ./scripts/pixi-local run -e batch build-stack
+```
+
+For interactive MUSE configuration, do not run raw `ccmake` against the MUSE
+source tree. Use the wrapper so CMake receives the same local Pixi/source-built
+paths as `build-muse`:
+
+```bash
+./scripts/pixi-local run -e batch ccmake-muse
+```
+
+If you change anything in `ccmake`, build and install that configured tree with:
+
+```bash
+./scripts/pixi-local run -e batch install-configured-muse
+```
+
+`build-muse` recreates `.install/build/muse` from the pinned defaults. Use it
+for the standard reproducible build, not for preserving manual `ccmake` edits.
+
+If a previous configure picked up Homebrew, Spack, `/usr/local`, or `~/.muse`,
+discard that polluted cache first:
+
+```bash
+./scripts/pixi-local run -e batch bash scripts/ccmake-muse.sh --fresh
 ```
 
 Build stamps live in `.install/state`. If a stage already has a stamp, the
