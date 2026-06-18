@@ -3,9 +3,9 @@
 # Shared MUSE CMake cache seeds. This file is sourced after env.sh.
 
 prepare_muse_source() {
-  local repo="${MUSE_REPO:-git@github.com:MUSE-EXP/MUSE.git}"
-  local ref="${MUSE_REF:-master}"
-  local sha="${MUSE_SHA:-37a7846d09fb44b7dff533a27ba242241de32504}"
+  local repo="${MUSE_REPO:-git@github.com:jmcguigan10/muse.git}"
+  local ref="${MUSE_REF:-impl/event-level-scatter}"
+  local sha="${MUSE_SHA:-d85c5aa6164b76565e3b40e94426f7ca89316edd}"
 
   MUSE_SRCDIR="$SRC/muse"
   MUSE_BUILDDIR="$BUILD/muse"

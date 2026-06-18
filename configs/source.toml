@@ -87,9 +87,9 @@ cmake_args = [
 
 [source.muse]
 kind = "git"
-url = "git@github.com:MUSE-EXP/MUSE.git"
-ref = "master"
-sha = "37a7846d09fb44b7dff533a27ba242241de32504"
+url = "git@github.com:jmcguigan10/muse.git"
+ref = "impl/event-level-scatter"
+sha = "d85c5aa6164b76565e3b40e94426f7ca89316edd"
 
 [build.muse]
 type = "cmake"
