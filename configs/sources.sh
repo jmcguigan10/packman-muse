@@ -34,4 +34,4 @@ fi
 
 : "${MUSE_REPO:=git@github.com:jmcguigan10/muse.git}"
 : "${MUSE_REF:=impl/event-level-scatter}"
-: "${MUSE_SHA:=d85c5aa6164b76565e3b40e94426f7ca89316edd}"
+: "${MUSE_SHA:=5d702e544980cc308a8f21fe15b4f3d6557d4bd9}"

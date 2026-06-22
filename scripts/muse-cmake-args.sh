@@ -5,7 +5,7 @@
 prepare_muse_source() {
   local repo="${MUSE_REPO:-git@github.com:jmcguigan10/muse.git}"
   local ref="${MUSE_REF:-impl/event-level-scatter}"
-  local sha="${MUSE_SHA:-d85c5aa6164b76565e3b40e94426f7ca89316edd}"
+  local sha="${MUSE_SHA:-5d702e544980cc308a8f21fe15b4f3d6557d4bd9}"
 
   MUSE_SRCDIR="$SRC/muse"
   MUSE_BUILDDIR="$BUILD/muse"

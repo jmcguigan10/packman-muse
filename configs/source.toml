@@ -89,7 +89,7 @@ cmake_args = [
 kind = "git"
 url = "git@github.com:jmcguigan10/muse.git"
 ref = "impl/event-level-scatter"
-sha = "d85c5aa6164b76565e3b40e94426f7ca89316edd"
+sha = "5d702e544980cc308a8f21fe15b4f3d6557d4bd9"
 
 [build.muse]
 type = "cmake"
