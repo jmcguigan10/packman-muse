@@ -33,5 +33,5 @@ fi
 : "${GENFIT_SHA:=56e733ff1eacf76b9f2cf046bb424c228ab57129}"
 
 : "${MUSE_REPO:=git@github.com:jmcguigan10/muse.git}"
-: "${MUSE_REF:=impl/event-level-scatter}"
-: "${MUSE_SHA:=5d702e544980cc308a8f21fe15b4f3d6557d4bd9}"
+: "${MUSE_REF:=impl/events-level-scatter}"
+: "${MUSE_SHA:=bffdd1b3286d9f5fb5844b14057e157343955f3d}"

@@ -80,6 +80,7 @@ prepare_muse_cmake_args() {
     -DGENFIT_LIBRARY_DIR="$(dirname "$genfit_library")"
     -DDo_G4PSI="$MUSE_DO_G4PSI"
     -DDO_RADGEN="$MUSE_DO_RADGEN"
+    -DDO_TIMEWALK="$MUSE_DO_TIMEWALK"
     -DDO_ML="$MUSE_DO_ML"
     -DDo_Tracking="$MUSE_DO_TRACKING"
   )

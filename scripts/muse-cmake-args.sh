@@ -4,8 +4,8 @@
 
 prepare_muse_source() {
   local repo="${MUSE_REPO:-git@github.com:jmcguigan10/muse.git}"
-  local ref="${MUSE_REF:-impl/event-level-scatter}"
-  local sha="${MUSE_SHA:-5d702e544980cc308a8f21fe15b4f3d6557d4bd9}"
+  local ref="${MUSE_REF:-impl/events-level-scatter}"
+  local sha="${MUSE_SHA:-bffdd1b3286d9f5fb5844b14057e157343955f3d}"
 
   MUSE_SRCDIR="$SRC/muse"
   MUSE_BUILDDIR="$BUILD/muse"
@@ -147,6 +147,7 @@ prepare_muse_cmake_args() {
     -DGENFIT_LIBRARY_DIR="$genfit_library_dir"
     -DDo_G4PSI=ON
     -DDO_RADGEN=ON
+    -DDO_TIMEWALK=ON
     -DDO_ML=OFF
     -DDo_Tracking=ON
     -DWITH_GEANT4_UIVIS=OFF
