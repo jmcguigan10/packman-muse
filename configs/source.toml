@@ -88,8 +88,8 @@ cmake_args = [
 [source.muse]
 kind = "git"
 url = "git@github.com:jmcguigan10/muse.git"
-ref = "impl/event-level-scatter"
-sha = "5d702e544980cc308a8f21fe15b4f3d6557d4bd9"
+ref = "impl/events-level-scatter"
+sha = "bffdd1b3286d9f5fb5844b14057e157343955f3d"
 
 [build.muse]
 type = "cmake"
@@ -125,6 +125,7 @@ cmake_args = [
     "-DGeant4_DIR={prefix.geant4}/lib/cmake/Geant4",
     "-DDo_G4PSI=ON",
     "-DDO_RADGEN=ON",
+    "-DDO_TIMEWALK=ON",
     "-DDO_ML=OFF",
     "-DDo_Tracking=OFF",
 ]

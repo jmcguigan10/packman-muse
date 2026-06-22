@@ -3,6 +3,7 @@
 
 : "${MUSE_DO_G4PSI:=ON}"
 : "${MUSE_DO_RADGEN:=ON}"
+: "${MUSE_DO_TIMEWALK:=ON}"
 : "${MUSE_DO_ML:=OFF}"
 : "${MUSE_DO_TRACKING:=On}"
 
